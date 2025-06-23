@@ -50,8 +50,9 @@ def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
 
     highest_val = 0
     for i in range(1, max_checks + 1):
-        # region = (717, 300, 469, 33)  # 只偵測王提示區域
-        region = (570, 290, 794, 47)  # 只偵測王提示區域
+        # region = (717, 300, 469, 33)  # 只偵測王提示區域 雪毛
+        region = (570, 290, 794, 47)  # 只偵測王提示區域 # 姑姑鐘 可能可以通用要多試試
+        # region = (692, 301, 522, 27) 
 
         screenshot = pyautogui.screenshot(region=region)
         screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
@@ -112,7 +113,7 @@ def get_channel_id_from_screen(timeout=15):
 
 # 傳送 Discord
 def send_discord_alert(message):
-    webhook_url = "https://discord.com/api/webhooks/1385589087125372999/7LB7lWc5JDGwkdwtoMlKgG8rtxRXHuyUFPCWUGmoJPe1Lou9ugAlGAL8xIm-7ZN7VYHQ"
+    webhook_url = ""
     payload = {
         "content": message
     }
@@ -183,7 +184,7 @@ def run_cycle():
             print(f"📌 頻道偵測完成：{channel_id}")
             human_click(1348, 243)
             print("📌 點擊結束按鈕完成")
-            send_discord_alert(f"⚠️ 雪毛怪人BOSS 出現了！頻道：{channel_id}，請立刻上線！")
+            send_discord_alert(f"⚠️ 姑姑鐘BOSS 出現了！頻道：{channel_id}，請立刻上線！")
             print("📌 Discord 通知發送完成")
 
 

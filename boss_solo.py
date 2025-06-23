@@ -5,9 +5,8 @@ import cv2
 import numpy as np
 import os
 import requests
-import pytesseract
-import re
-import threading
+
+# DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1385589087125372999/7LB7lWc5JDGwkdwtoMlKgG8rtxRXHuyUFPCWUGmoJPe1Lou9ugAlGAL8xIm-7ZN7VYHQ"
 
 # 模擬點擊（人為延遲與微偏移）
 def human_click(x, y):
@@ -40,20 +39,18 @@ def wait_for_image(template_path, timeout=20, threshold=0.85):
     print("⚠️ 超時未偵測到登入畫面")
     return False
 
-def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
+def detect_boss(template_path="0.png", threshold=0.50, max_checks=7):
     print(f"🕵️‍♂️ 掃描 BOSS 提示中...（threshold={threshold}, max_checks={max_checks} 次）")
 
-    template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
+    template = cv2.imread(template_path, cv2.IMREAD_COLOR)
     if template is None:
         print(f"❌ BOSS 圖片讀取失敗：{template_path}")
         return False
 
     highest_val = 0
     for i in range(1, max_checks + 1):
-        region = (717, 300, 469, 33)
-        screenshot = pyautogui.screenshot(region=region)
-        screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
-
+        screenshot = pyautogui.screenshot()
+        screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
         result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
         max_val = result.max()
 
@@ -64,45 +61,34 @@ def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
             highest_val = max(highest_val, max_val)
             print(f"❌ 第 {i} 次：相似度不足（最高至今：{highest_val:.3f}）")
 
-        time.sleep(0.5)
+        time.sleep(0.8)
 
     print("❌ 所有偵測次數內未發現 BOSS")
     return False
 
-# 改良版 OCR，防止卡死
-def safe_get_channel_id(timeout=6):
-    region = (585, 278, 105, 22)
-    result = {"channel": "未知頻道"}
 
-    def ocr_task():
-        try:
-            screenshot = pyautogui.screenshot(region=region)
-            screenshot = screenshot.convert("L")
-            text = pytesseract.image_to_string(screenshot, lang='eng', config='--psm 7')
-            print(f"🧾 OCR 擷取文字：{text.strip()}")
-            match = re.search(r"\d{3,5}", text)
-            if match:
-                result["channel"] = match.group()
-        except Exception as e:
-            print(f"⚠️ OCR 錯誤：{e}")
 
-    thread = threading.Thread(target=ocr_task)
-    thread.start()
-    thread.join(timeout)
-
-    if thread.is_alive():
-        print("⏰ OCR 超時，回傳預設頻道")
-        return "未知頻道"
-    return result["channel"]
-
-# 播放提示音
+# 播放提示音（使用 macOS 內建 afplay 或語音）
 def play_alert():
     if os.path.exists("alert.mp3"):
         os.system("afplay alert.mp3")
     else:
         os.system('say "王王王王出現了！"')
 
-# 傳送 Discord
+    # # 傳送 Discord 通知
+    # try:
+    #     payload = {
+    #         "content": "🎯 發現 BOSS！請立刻上線！擠 櫻吹雪 頻道"
+    #     }
+    #     response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
+    #     if response.status_code == 204:
+    #         print("✅ Discord 通知已發送")
+    #     else:
+    #         print(f"⚠️ Discord 發送失敗：{response.status_code}")
+    # except Exception as e:
+    #     print(f"❌ 發送 Discord 時發生錯誤：{e}")
+
+
 def send_discord_alert(message):
     webhook_url = "https://discord.com/api/webhooks/1385589087125372999/7LB7lWc5JDGwkdwtoMlKgG8rtxRXHuyUFPCWUGmoJPe1Lou9ugAlGAL8xIm-7ZN7VYHQ"
     payload = {
@@ -119,31 +105,23 @@ def send_discord_alert(message):
     except Exception as e:
         print(f"❌ 發送 Discord 通知時發生錯誤：{e}")
 
-# 查看換頻
-def channel():
-    print("🔄 查看頻道")
-    human_click(1714, 1050)
-    human_click(1704, 962)
-    time.sleep(3)
-    print("✅ 查看完成")
-
 # 換頻流程
 def change_channel():
     print("🔄 開始換頻")
     human_click(1714, 250)
-    human_click(1714, 1050)
-    human_click(1704, 962)
-    human_click(1290, 241)
-    human_click(872, 612)
+    human_click(1714, 1050)  # 換頻入口
+    human_click(1704, 962)   # 頻道列表
+    human_click(1290, 241)   # 進入頻道
+    human_click(872, 612)    # 確認換頻
     print("✅ 換頻完成")
 
 # 進入遊戲流程
 def enter_game():
     print("🎮 進入遊戲流程")
     time.sleep(5)
-    human_click(1297, 574)
+    human_click(1297, 574)   # 進入遊戲按鈕
     time.sleep(5)
-    human_click(1311, 406)
+    human_click(1311, 406)   # 確認按鈕
     print("✅ 進入遊戲完成")
 
 # 主循環流程
@@ -156,22 +134,13 @@ def run_cycle():
         else:
             print("❌ 跳過進入遊戲")
 
-        time.sleep(2)
+        time.sleep(2)  # 畫面穩定時間
 
-        if detect_boss("4.png", threshold=0.3, max_checks=6):
+        if detect_boss("1.png", threshold=0.3, max_checks=6):
             print("🔔 發現 BOSS，播放提示")
             play_alert()
-            print("📌 準備進行頻道偵測與通知...")
-            channel()
-            channel_id = safe_get_channel_id()
-            print(f"📌 頻道偵測完成：{channel_id}")
-            human_click(1348, 243)
-            print("📌 點擊結束按鈕完成")
-            send_discord_alert(f"⚠️ 雪毛怪人BOSS 出現了！頻道：{channel_id}，請立刻上線！")
-            print("📌 Discord 通知發送完成")
-            print("✅ 已通知，繼續換頻...\n")
-            time.sleep(3)
-            continue
+            send_discord_alert("警告！！！BOSS 出現了！擠櫻吹雪頻道")
+            break
         else:
             print("❌ 未偵測到 BOSS，準備換下一頻...\n")
             time.sleep(2)

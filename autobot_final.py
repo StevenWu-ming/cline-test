@@ -10,7 +10,8 @@ PORTAL_IMAGE_PATH = "portal.png"
 FREEMARK_IMAGE_PATH = "freemark.png"
 PORTAL_X = 330
 ENTER_KEY_REPEAT = 3
-LOOP_INTERVAL_SECONDS = 4 * 60
+WAIT_INSIDE = 220         # 在自由市場等待時間（秒）
+
 MAX_MOVE_TRY = 30
 STEP_TIME = 0.3
 CONF_THRESHOLD = 0.4
@@ -79,20 +80,26 @@ def try_enter_and_confirm():
 
 # 主循環
 if __name__ == '__main__':
-    print("✅ 自動掛機腳本 (固定走位+freemark 判斷離開修正) 啟動")
+    print("✅ 自動掛機腳本 (固定走位+freemark 判斷離開+等待4分鐘) 啟動")
     time.sleep(2)
     while True:
         print("🌀 按 Shift 施放技能")
         keyboard.press(Key.shift)
-        time.sleep(0.1)
+        time.sleep(0.3)
         keyboard.release(Key.shift)
+        time.sleep(1)
+        keyboard.press(Key.delete)
+        time.sleep(0.6)
+        keyboard.release(Key.delete)
+        time.sleep(0.1)
 
         print("🏪 點擊自由市場")
         pyautogui.click(FREE_MARKET_BTN)
         time.sleep(5)
 
+        print(f"⏱ 在自由市場等待 {WAIT_INSIDE//60} 分鐘...")
+        time.sleep(WAIT_INSIDE)
+
         move_to_portal()
         try_enter_and_confirm()
 
-        print(f"⏳ 等待下一輪 {LOOP_INTERVAL_SECONDS//60} 分鐘...\n")
-        time.sleep(LOOP_INTERVAL_SECONDS)

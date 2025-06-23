@@ -50,7 +50,9 @@ def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
 
     highest_val = 0
     for i in range(1, max_checks + 1):
-        region = (717, 300, 469, 33)  # 只偵測王提示區域
+        # region = (717, 300, 469, 33)  # 只偵測王提示區域
+        region = (570, 290, 794, 47)  # 只偵測王提示區域
+
         screenshot = pyautogui.screenshot(region=region)
         screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
 
@@ -101,12 +103,12 @@ def get_channel_id_from_screen(timeout=15):
     return "未知頻道"
 
 
-# 播放提示音
-def play_alert():
-    if os.path.exists("alert.mp3"):
-        os.system("afplay alert.mp3")
-    else:
-        os.system('say "王王王王出現了！"')
+# # 播放提示音
+# def play_alert():
+#     if os.path.exists("alert.mp3"):
+#         os.system("afplay alert.mp3")
+#     else:
+#         os.system('say "王王王王出現了！"')
 
 # 傳送 Discord
 def send_discord_alert(message):
@@ -165,9 +167,9 @@ def run_cycle():
 
         time.sleep(2)
 
-        if detect_boss("4.png", threshold=0.3, max_checks=6):
-            print("🔔 發現 BOSS，播放提示")
-            play_alert()
+        if detect_boss("2.png", threshold=0.3, max_checks=6):
+            # print("🔔 發現 BOSS，播放提示")
+            # play_alert()
 
             # channel()
             # channel_id = get_channel_id_from_screen()

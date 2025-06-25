@@ -7,6 +7,15 @@ import os
 import requests
 import pytesseract
 import re
+from PIL import Image
+from datetime import datetime
+
+
+# OCR 擷取頻道用參數
+CHANNEL_REGION = (630, 275, 70, 26)
+DEBUG_FOLDER = "ocr_debug"
+os.makedirs(DEBUG_FOLDER, exist_ok=True)
+
 
 # 模擬點擊（人為延遲與微偏移）
 def human_click(x, y):
@@ -17,6 +26,7 @@ def human_click(x, y):
     )
     pyautogui.click()
     time.sleep(random.uniform(0.5, 1.2))
+
 
 # 等待畫面載入完成（偵測進入遊戲按鈕）
 def wait_for_image(template_path, timeout=20, threshold=0.85):
@@ -39,7 +49,7 @@ def wait_for_image(template_path, timeout=20, threshold=0.85):
     print("⚠️ 超時未偵測到登入畫面")
     return False
 
-def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
+def detect_boss(template_path="4.png", threshold=0.6, max_checks=7):
     print(f"🕵️‍♂️ 掃描 BOSS 提示中...（threshold={threshold}, max_checks={max_checks} 次）")
 
     # 用灰階載入圖像，可提升準確度
@@ -50,8 +60,9 @@ def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
 
     highest_val = 0
     for i in range(1, max_checks + 1):
+        region = (731, 301, 446, 32)
         # region = (717, 300, 469, 33)  # 只偵測王提示區域 雪毛
-        region = (570, 290, 794, 47)  # 只偵測王提示區域 # 姑姑鐘 可能可以通用要多試試
+        # region = (570, 290, 794, 47)  # 只偵測王提示區域 # 姑姑鐘 可能可以通用要多試試
         # region = (692, 301, 522, 27) 
 
         screenshot = pyautogui.screenshot(region=region)
@@ -85,19 +96,39 @@ def detect_boss(template_path="0.png", threshold=0.6, max_checks=7):
 #         return match.group()
 #     return "未知頻道"
 
-def get_channel_id_from_screen(timeout=15):
-    region = (585, 278, 105, 22)
-    start = time.time()
+def preprocess_for_ocr(image):
+    gray = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+    _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((1, 1), np.uint8)
+    processed = cv2.dilate(thresh, kernel, iterations=1)
+    return processed
 
+def get_channel_id_from_screen(timeout=15):
+    start = time.time()
     while time.time() - start < timeout:
-        screenshot = pyautogui.screenshot(region=region)
-        screenshot = screenshot.convert("L")
-        text = pytesseract.image_to_string(screenshot, lang='eng', config='--psm 7')
-        print(f"🧾 OCR 擷取文字：{text.strip()}")
+        screenshot = pyautogui.screenshot(region=CHANNEL_REGION)
+        processed = preprocess_for_ocr(screenshot)
+
+        text = pytesseract.image_to_string(
+            processed,
+            lang='eng',
+            config='--psm 7 -c tessedit_char_whitelist=0123456789'
+        ).strip()
+        print(f"🧾 OCR 擷取文字：{text}")
 
         match = re.search(r"\d{3,5}", text)
         if match:
-            return match.group()
+            channel = match.group()
+            if 1 <= int(channel) <= 5000:
+                print(f"✅ 偵測到頻道：{channel}")
+                return channel
+            else:
+                print(f"⚠️ 偵測到不合理頻道號：{channel}")
+        else:
+            print("❌ 未偵測成功，重試中...")
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        cv2.imwrite(os.path.join(DEBUG_FOLDER, f"fail_{timestamp}.png"), processed)
         time.sleep(0.5)
 
     print("⚠️ 頻道擷取超時，回傳預設值")
@@ -113,7 +144,7 @@ def get_channel_id_from_screen(timeout=15):
 
 # 傳送 Discord
 def send_discord_alert(message):
-    webhook_url = "https://discord.com/api/webhooks/1386644016560476160/fqvm7j01D0YKfnxkDh17YlGZpLHshNkSSKzNKVMr-GFXFGkYr2BFRjLeTOnU_8m2QXci"
+    webhook_url = "https://discord.com/api/webhooks/1386755368956461156/kwkhDT5hWtmoAlRKycK__8dd7pqVD74Czv0KNNLe2yqF1FiY1kxlsNKFFjonyteiOKhB"
     payload = {
         "content": message
     }
@@ -168,7 +199,7 @@ def run_cycle():
 
         time.sleep(2)
 
-        if detect_boss("2.png", threshold=0.3, max_checks=6):
+        if detect_boss("4.png", threshold=0.3, max_checks=6):
             # print("🔔 發現 BOSS，播放提示")
             # play_alert()
 
@@ -184,7 +215,7 @@ def run_cycle():
             print(f"📌 頻道偵測完成：{channel_id}")
             human_click(1348, 243)
             print("📌 點擊結束按鈕完成")
-            send_discord_alert(f"⚠️ 姑姑鐘BOSS 出現了！頻道：{channel_id}，請立刻上線！")
+            send_discord_alert(f"⚠️ BOSS 出現了！頻道：{channel_id}，請立刻上線！")
             print("📌 Discord 通知發送完成")
 
 

@@ -1,13 +1,14 @@
-# 頻道 OCR 擷取區域
-CHANNEL_REGION = (585, 278, 105, 22)
 
 # 選擇要執行的 BOSS 名稱
-SELECTED_BOSS_NAME = "姑姑鐘"  # ✅ 這裡改你要跑的王名稱
+SELECTED_BOSS_NAME = "雪毛怪人"  # ✅ 這裡改你要跑的王名稱
+
+# 頻道 OCR 擷取區域
+CHANNEL_REGION = (630, 275, 70, 26) # (585, 278, 105, 22) 包含“頻道”
 
 # 全域 timeout 設定（秒）
 TIMEOUT_CONFIG = {
     "ocr_timeout": 15,           # 頻道擷取最多等待幾秒
-    "wait_image_timeout": 30,    # 等待進入遊戲畫面最多幾秒
+    "wait_image_timeout": 5,    # 等待進入遊戲畫面最多幾秒
     "between_steps": 2,          # 換頻後進入遊戲前等待幾秒
     "after_notify_delay": 3      # 通知後延遲幾秒才繼續下一輪
 }
@@ -17,7 +18,7 @@ BOSSES = [
     {
         "name": "雪毛怪人",
         "image_path": "4.png",
-        "region": (717, 300, 469, 33),
+        "region": (731, 301, 446, 32), #(717, 300, 469, 33)
         "threshold": 0.3,
         "max_checks": 6,
         "message_template": "⚠️ 雪毛怪人出現！頻道：{channel_id}，請立刻支援！",

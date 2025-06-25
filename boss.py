@@ -7,24 +7,30 @@ import os
 import requests
 import pytesseract
 import re
+from datetime import datetime
+from PIL import Image
 from config import (
     selected_boss,
     CHANNEL_REGION,
     TIMEOUT_CONFIG,
 )
 
-# 將 timeout 個別拉出變數使用
-ocr_timeout = TIMEOUT_CONFIG["OCR_TIMEOUT"]
+# timeout 設定
+ocr_timeout = TIMEOUT_CONFIG["ocr_timeout"]
 wait_image_timeout = TIMEOUT_CONFIG["wait_image_timeout"]
 between_steps = TIMEOUT_CONFIG["between_steps"]
 after_notify_delay = TIMEOUT_CONFIG["after_notify_delay"]
+
+# debug 圖片儲存
+DEBUG_FOLDER = "ocr_debug"
+os.makedirs(DEBUG_FOLDER, exist_ok=True)
 
 print("\n📋 正在執行 BOSS 偵測配置：")
 print(f"🔹 名稱：{selected_boss['name']}")
 print(f"🔹 圖片路徑：{selected_boss['image_path']}")
 print(f"🔹 偵測區域：{selected_boss['region']}")
 print(f"🔹 相似度門檻：{selected_boss['threshold']}")
-print(f"🔹 Webhook：{selected_boss['discord_webhook'][:60]}...")
+print(f"🔹 Webhook：{selected_boss['discord_webhook']}")
 print(f"🔹 訊息模板：{selected_boss['message_template']}\n")
 
 def human_click(x, y):
@@ -81,17 +87,43 @@ def detect_boss():
     print("❌ 所有偵測次數內未發現 BOSS")
     return False
 
+# 預處理 OCR 圖像
+def preprocess_for_ocr(image):
+    gray = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+    _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((1, 1), np.uint8)
+    processed = cv2.dilate(thresh, kernel, iterations=1)
+    return processed
+
+# 新 OCR 偵測頻道邏輯（強化）
 def get_channel_id_from_screen(timeout=ocr_timeout):
     start = time.time()
     while time.time() - start < timeout:
         screenshot = pyautogui.screenshot(region=CHANNEL_REGION)
-        screenshot = screenshot.convert("L")
-        text = pytesseract.image_to_string(screenshot, lang='eng', config='--psm 7')
-        print(f"🧾 OCR 擷取文字：{text.strip()}")
+        processed = preprocess_for_ocr(screenshot)
+
+        text = pytesseract.image_to_string(
+            processed,
+            lang='eng',
+            config='--psm 7 -c tessedit_char_whitelist=0123456789'
+        ).strip()
+
+        print(f"🧾 OCR 擷取文字：{text}")
         match = re.search(r"\d{3,5}", text)
         if match:
-            return match.group()
+            channel = match.group()
+            if 1 <= int(channel) <= 5000:
+                print(f"✅ 偵測到頻道：{channel}")
+                return channel
+            else:
+                print(f"⚠️ 偵測到不合理頻道號：{channel}")
+        else:
+            print("❌ 未偵測成功，重試中...")
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        Image.fromarray(processed).save(os.path.join(DEBUG_FOLDER, f"fail_{timestamp}.png"))
         time.sleep(0.5)
+
     print("⚠️ 頻道擷取超時，回傳預設值")
     return "未知頻道"
 
@@ -165,4 +197,5 @@ def run_cycle():
             print("❌ 未偵測到 BOSS，準備換下一頻...\n")
             time.sleep(between_steps)
 
+# 執行主流程
 run_cycle()

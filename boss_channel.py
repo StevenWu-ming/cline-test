@@ -144,7 +144,7 @@ def get_channel_id_from_screen(timeout=15):
 
 # 傳送 Discord
 def send_discord_alert(message):
-    webhook_url = "https://discord.com/api/webhooks/1386755368956461156/kwkhDT5hWtmoAlRKycK__8dd7pqVD74Czv0KNNLe2yqF1FiY1kxlsNKFFjonyteiOKhB"
+    webhook_url = "https://discord.com/api/webhooks/1387863706901283026/WtYQAT8Vj7dyjBCMW_lMqZ9RRPfFi2P-qtniI3dwdHsgomIWdbH3AtcFUGrhiWAuqz7Z"
     payload = {
         "content": message
     }

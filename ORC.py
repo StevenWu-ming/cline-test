@@ -37,7 +37,7 @@ def get_channel_id_from_screen(timeout=15):
         ).strip()
         print(f"🧾 OCR 擷取文字：{text}")
 
-        match = re.search(r"\d{3,5}", text)
+        match = re.search(r"\d{1,4}", text)
         if match:
             channel = match.group()
             if 1 <= int(channel) <= 5000:

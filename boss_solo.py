@@ -109,7 +109,7 @@ def get_channel_id_from_screen(timeout=ocr_timeout):
         ).strip()
 
         print(f"🧾 OCR 擷取文字：{text}")
-        match = re.search(r"\d{3,5}", text)
+        match = re.search(r"\d{1,4}", text)
         if match:
             channel = match.group()
             if 1 <= int(channel) <= 5000:
@@ -183,16 +183,17 @@ def run_cycle():
         if detect_boss():
             print("🔔 發現 BOSS，播放提示")
             play_alert()
-            # print("📌 準備進行頻道偵測與通知...")
-            # channel()
-            # channel_id = get_channel_id_from_screen()
-            # print(f"📌 頻道偵測完成：{channel_id}")
-            # human_click(1348, 243)
-            # print("📌 點擊結束按鈕完成")
-            # send_discord_alert(selected_boss['message_template'].format(channel_id=channel_id))
-            # print("📌 Discord 通知發送完成")
-            # print("✅ 已通知，繼續換頻...\n")
-            # time.sleep(after_notify_delay)
+            print("📌 準備進行頻道偵測與通知...")
+            channel()
+            channel_id = get_channel_id_from_screen()
+            print(f"📌 頻道偵測完成：{channel_id}")
+            human_click(1348, 243)
+            print("📌 點擊結束按鈕完成")
+            send_discord_alert(selected_boss['message_template'].format(channel_id=channel_id))
+            print("📌 Discord 通知發送完成")
+            print("✅ 已通知，繼續換頻...\n")
+            time.sleep(after_notify_delay)
+            # send_discord_alert("偵測到殭屍姑姑 擠我頻道")
             break  # 偵測到 BOSS 後結束循環，準備換頻
         else:
             print("❌ 未偵測到 BOSS，準備換下一頻...\n")

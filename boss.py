@@ -7,6 +7,7 @@ import os
 import requests
 import pytesseract
 import re
+import subprocess
 from datetime import datetime
 from PIL import Image
 from config import (
@@ -129,9 +130,9 @@ def get_channel_id_from_screen(timeout=ocr_timeout):
 
 def play_alert():
     if os.path.exists("alert.mp3"):
-        os.system("afplay alert.mp3")
+        subprocess.Popen(["afplay", "alert.mp3"])
     else:
-        os.system('say "王王王王出現了！"')
+        subprocess.Popen(["say", "王王王王出現了！"])
 
 def send_discord_alert(message):
     payload = {"content": message}

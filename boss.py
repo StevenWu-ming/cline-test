@@ -14,6 +14,7 @@ from config import (
     selected_boss,
     CHANNEL_REGION,
     TIMEOUT_CONFIG,
+    HP_REGION
 )
 
 # timeout 設定
@@ -87,6 +88,29 @@ def detect_boss():
 
     print("❌ 所有偵測次數內未發現 BOSS")
     return False
+
+def get_boss_hp_percentage(timeout=5):
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        screenshot = pyautogui.screenshot(region=HP_REGION)
+        gray = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
+        _, thresh = cv2.threshold(gray, 160, 255, cv2.THRESH_BINARY)
+
+        text = pytesseract.image_to_string(thresh, lang='eng', config='--psm 7').strip()
+        print("🧾 OCR 擷取文字：", text)
+
+        match = re.search(r'(\d{1,3})\s*%', text)
+        if match:
+            percent = int(match.group(1))
+            print(f"✅ 偵測到血量百分比：{percent}%")
+            return percent
+        else:
+            print("❌ 未偵測到 % 數，重試中...")
+
+        time.sleep(0.5)
+
+    print("⚠️ 超時仍未偵測到血量 % 數（可能沒人打）")
+    return None
 
 # 預處理 OCR 圖像
 def preprocess_for_ocr(image):
@@ -177,6 +201,7 @@ def run_cycle():
         if wait_for_image("enter_ready.png"):
             enter_game()
         else:
+            human_click(1227, 455)
             print("❌ 跳過進入遊戲")
 
         time.sleep(between_steps)
@@ -190,7 +215,16 @@ def run_cycle():
             print(f"📌 頻道偵測完成：{channel_id}")
             human_click(1348, 243)
             print("📌 點擊結束按鈕完成")
-            send_discord_alert(selected_boss['message_template'].format(channel_id=channel_id))
+
+                        # 新增血量偵測
+            hp = get_boss_hp_percentage()
+            if hp is not None:
+                message = f"{selected_boss['message_template'].format(channel_id=channel_id)}（剩餘血量：約 {hp}%）"
+            else:
+                message = f"{selected_boss['message_template'].format(channel_id=channel_id)}(目前還沒人打)"
+
+
+            send_discord_alert(message)
             print("📌 Discord 通知發送完成")
             print("✅ 已通知，繼續換頻...\n")
             time.sleep(after_notify_delay)

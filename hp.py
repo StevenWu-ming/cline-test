@@ -4,8 +4,10 @@ import re
 import time
 import numpy as np
 import cv2
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-HP_REGION = (365, 63, 383, 29) # 固定血條位置
+HP_REGION =(496, 38, 139, 32) # 固定血條位置
 
 def get_boss_hp_percentage(timeout=10):
     start_time = time.time()

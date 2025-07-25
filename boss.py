@@ -16,6 +16,9 @@ from config import (
     TIMEOUT_CONFIG,
     HP_REGION
 )
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 
 # timeout 設定
 ocr_timeout = TIMEOUT_CONFIG["ocr_timeout"]
@@ -152,11 +155,11 @@ def get_channel_id_from_screen(timeout=ocr_timeout):
     print("⚠️ 頻道擷取超時，回傳預設值")
     return "未知頻道"
 
-def play_alert():
-    if os.path.exists("alert.mp3"):
-        subprocess.Popen(["afplay", "alert.mp3"])
-    else:
-        subprocess.Popen(["say", "王王王王出現了！"])
+# def play_alert():
+#     if os.path.exists("alert.mp3"):
+#         subprocess.Popen(["afplay", "alert.mp3"])
+#     else:
+#         subprocess.Popen(["say", "王王王王出現了！"])
 
 def send_discord_alert(message):
     payload = {"content": message}
@@ -172,26 +175,26 @@ def send_discord_alert(message):
 
 def channel():
     print("🔄 查看頻道")
-    human_click(1714, 1050)
-    human_click(1704, 962)
+    human_click(1718, 997)
+    human_click(1725, 917)
     time.sleep(3)
     print("✅ 查看完成")
 
 def change_channel():
     print("🔄 開始換頻")
-    human_click(1714, 250)
-    human_click(1714, 1050)
-    human_click(1704, 962)
-    human_click(1290, 241)
     human_click(872, 612)
+    human_click(1718, 997)
+    human_click(1725, 917)
+    human_click(1282, 206)
+    human_click(888, 576)
     print("✅ 換頻完成")
 
 def enter_game():
     print("🎮 進入遊戲流程")
     time.sleep(5)
-    human_click(1297, 574)
+    human_click(1286, 534)
     time.sleep(5)
-    human_click(1311, 406)
+    human_click(1303, 379)
     print("✅ 進入遊戲完成")
 
 def run_cycle():
@@ -208,12 +211,12 @@ def run_cycle():
 
         if detect_boss():
             print("🔔 發現 BOSS，播放提示")
-            play_alert()
+            # play_alert()
             print("📌 準備進行頻道偵測與通知...")
             channel()
             channel_id = get_channel_id_from_screen()
             print(f"📌 頻道偵測完成：{channel_id}")
-            human_click(1348, 243)
+            human_click(1343, 212)
             print("📌 點擊結束按鈕完成")
 
                         # 新增血量偵測

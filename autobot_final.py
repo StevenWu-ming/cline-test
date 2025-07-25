@@ -5,12 +5,12 @@ import time
 from pynput.keyboard import Controller, Key
 
 # === 參數設定 ===
-FREE_MARKET_BTN = (1471, 1031)
+FREE_MARKET_BTN = (1472, 999)
 PORTAL_IMAGE_PATH = "portal.png"
 FREEMARK_IMAGE_PATH = "freemark.png"
 # PORTAL_X = 330
 ENTER_KEY_REPEAT = 3
-WAIT_INSIDE = 4 * 60          # 在自由市場等待時間（秒）
+WAIT_INSIDE = 4*60     # 在自由市場等待時間（秒）
 # MAX_MOVE_TRY = 30
 STEP_TIME = 0.3
 CONF_THRESHOLD = 0.4
@@ -93,9 +93,14 @@ if __name__ == '__main__':
     time.sleep(2)
     while True:
         print("🌀 按 Shift 施放技能")
+        time.sleep(1)
         keyboard.press(Key.shift)
         time.sleep(0.3)
         keyboard.release(Key.shift)
+        time.sleep(1)
+        keyboard.press(Key.insert)
+        time.sleep(0.3)
+        keyboard.release(Key.insert)
 
         print("🏪 點擊自由市場")
         pyautogui.click(FREE_MARKET_BTN)
